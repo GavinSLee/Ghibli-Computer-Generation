@@ -1,7 +1,6 @@
 from music21 import converter, instrument, note, chord
 
 def parseFile():
-
     notes = []
     for file in glob.glob("midi_songs/*.mid"):
         midi = converter.parse(file)
