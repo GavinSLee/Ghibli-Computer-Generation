@@ -1,7 +1,6 @@
 import tensorflow as tf
 import numpy as np
 from tensorflow.keras import Model
-from preprocess import get_data, get_batch
 
 
 class Model(tf.keras.Model):
@@ -15,19 +14,26 @@ class Model(tf.keras.Model):
         super(Model, self).__init__()
 
         # hyperparameters
-
+        
         self.vocab_size = vocab_size
-        self.window_size = 20 
-        self.embedding_size = 50
-        self.batch_size = 300 
-        self.hidden_size = 1000
-        self.learning_rate = 0.005
+        self.epochs = 200
+        self.batch_size = 128 
+        self.dropout_rate = 0.3
+        self.embedding_size = 512
+        self.hidden_size = 256
+        self.learning_rate = 0.01
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
 
         self.E = tf.Variable(tf.random.truncated_normal([self.vocab_size, self.embedding_size], stddev=.1))
-        self.lstm = tf.keras.layers.LSTM(self.embedding_size, return_sequences=True, return_state=True)
+
+        self.lstm1 = tf.keras.layers.LSTM(self.embedding_size, return_sequences=True, return_state=True)
+        self.lstm2 = tf.keras.layers.LSTM(self.embedding_size, return_sequences=True, return_state=True)
+
+        self.dropout1 = tf.keras.layers.Dropout(self.dropout_rate)
+        self.dropout2 = tf.keras.layers.Dropout(self.dropout_rate)
+
         self.dense1 = tf.keras.layers.Dense(self.hidden_size, activation = 'relu')
-        self.dense2 = tf.keras.layers.Dense(self.vocab_size, activation = 'softmax')
+        self.dense2 = tf.keras.layers.Dense(vocab_size, activation = 'softmax')
 
 
     def call(self, inputs, initial_state):
@@ -42,16 +48,27 @@ class Model(tf.keras.Model):
         using LSTM and only the probabilites as a tensor and a final_state as a tensor when using GRU 
         """
         
+        print(inputs.shape)
+    
         #lookup embedding
-        embedding = tf.nn.embedding_lookup(self.E, inputs); 
+        # embedding = tf.nn.embedding_lookup(self.E, inputs); 
+
 
         #run through lstm
-        whole_seq_output, final_memory_state, final_carry_state = self.lstm(embedding, initial_state = initial_state)
+        whole_seq_output1, final_memory_state, final_carry_state = self.lstm1(inputs, initial_state = initial_state)
+        # whole_seq_output2, final_memory_state_2, final_carry_State2 = self.lstm(embedding)
+        print(whole_seq_output1.shape)
 
         #two linear layers (first one has Relu, second one has softmax)
-        dense1_output = self.dense1(whole_seq_output)
-        probabilities = self.dense2(dense1_output)
-        return probabilities, (final_memory_state, final_carry_state)
+        dropout1_output = self.dropout1(whole_seq_output1)
+        dense1_output = self.dense1(dropout1_output)
+
+        dropout2_output = self.dropout2(dense1_output)
+        dense2_output = self.dense2(dropout2_output)
+
+        print(dense2_output.shape)
+
+        return dense2_output
 
     def loss(self, probs, labels):
         """
@@ -78,52 +95,50 @@ def train(model, train_inputs, train_labels):
     :param train_labels: train labels (all labels for training) of shape (num_labels,)
     :return: None
     """
-    #same windows_count for both inputs and labels
-    windows_count = len(train_inputs) // model.window_size
-    #remove excess elements that don't fit the window
-    train_inputs = train_inputs[:windows_count * model.window_size]
-    train_labels = train_labels[:windows_count * model.window_size]
-    #reshaping 
-    train_inputs = train_inputs.reshape(-1, model.window_size)
-    train_labels = train_labels.reshape(-1, model.window_size)
-
+    
     #count how many batches are being made
     batch_count = train_inputs.shape[0] // model.batch_size
     for i in range(batch_count):
         #get batch / slices from the input and labels
-        batch_inputs, batch_labels = get_batch(train_inputs, train_labels, i * model.batch_size, model.batch_size)
+        batch_inputs = train_inputs[i * batch_count: i * batch_count + batch_count]
+        batch_labels = train_labels[i * batch_count : i * batch_count + batch_count]
         with tf.GradientTape() as tape: #gradient descent
-            probabilities = model.call(batch_inputs, None)[0]
+            probabilities = model.call(batch_inputs, None)
+            print("final sahpe", probabilities.shape)
+            print(batch_labels.shape)
             loss = model.loss(probabilities, batch_labels)
         gradients = tape.gradient(loss, model.trainable_variables)
         model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
 
 def test(model, test_inputs, test_labels):
-    """
-    Runs through one epoch - all testing examples
+    pass
 
-    :param model: the trained model to use for prediction
-    :param test_inputs: train inputs (all inputs for testing) of shape (num_inputs,)
-    :param test_labels: train labels (all labels for testing) of shape (num_labels,)
-    :returns: perplexity of the test set
-    """
+# def test(model, test_inputs, test_labels):
+#     """
+#     Runs through one epoch - all testing examples
+
+#     :param model: the trained model to use for prediction
+#     :param test_inputs: train inputs (all inputs for testing) of shape (num_inputs,)
+#     :param test_labels: train labels (all labels for testing) of shape (num_labels,)
+#     :returns: perplexity of the test set
+#     """
     
-    #same windows_count for both inputs and labels
-    windows_count = len(test_inputs) // model.window_size
-    #remove excess elements that don't fit the window
-    test_inputs = test_inputs[:windows_count * model.window_size]
-    test_labels = test_labels[:windows_count * model.window_size]
-    #reshaping 
-    test_inputs = test_inputs.reshape(-1, model.window_size)
-    test_labels = test_labels.reshape(-1, model.window_size)
+#     #same windows_count for both inputs and labels
+#     windows_count = len(test_inputs) // model.window_size
+#     #remove excess elements that don't fit the window
+#     test_inputs = test_inputs[:windows_count * model.window_size]
+#     test_labels = test_labels[:windows_count * model.window_size]
+#     #reshaping 
+#     test_inputs = test_inputs.reshape(-1, model.window_size)
+#     test_labels = test_labels.reshape(-1, model.window_size)
 
-    #count how many batches are being made
-    batch_count = test_inputs.shape[0] // model.batch_size
-    losses_sum = 0; #sum up all the losses and average it here
-    for i in range(batch_count):
-        batch_inputs, batch_labels = get_batch(test_inputs, test_labels, i * model.batch_size, model.batch_size)
-        probabilities = model.call(batch_inputs, None)[0]
-        losses_sum += model.loss(probabilities, batch_labels)
-    avglosses = losses_sum / batch_count
-    return np.e**avglosses #perplexity
+#     #count how many batches are being made
+#     batch_count = test_inputs.shape[0] // model.batch_size
+#     losses_sum = 0; #sum up all the losses and average it here
+#     for i in range(batch_count):
+#         batch_inputs, batch_labels = get_batch(test_inputs, test_labels, i * model.batch_size, model.batch_size)
+#         probabilities = model.call(batch_inputs, None)[0]
+#         losses_sum += model.loss(probabilities, batch_labels)
+#     avglosses = losses_sum / batch_count
+#     return np.e**avglosses #perplexity
