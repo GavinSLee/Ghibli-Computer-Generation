@@ -1,14 +1,18 @@
 """ This module generates notes for a midi file using the
     trained neural network """
+import glob
 import pickle
 import numpy
-from music21 import instrument, note, stream, chord
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Dropout
-from keras.layers import LSTM
-from keras.layers import BatchNormalization as BatchNorm
-from keras.layers import Activation
+from music21 import converter, instrument, note, chord, stream 
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import LSTM
+from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import BatchNormalization as BatchNorm
+# from tensorflow.python.keras import utils
+from tensorflow import keras
+from tensorflow.keras.callbacks import ModelCheckpoint
 
 def generate():
     """ Generate a piano midi file """
