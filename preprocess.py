@@ -74,7 +74,7 @@ def get_notes_sequences(notes, vocab_size):
     inputs = inputs / float(vocab_size)
     labels = utils.to_categorical(labels)
 
-    return (note_dict, inputs, labels)
+    return inputs, labels, note_dict
 
 def predict_notes(model, note_dict, starting_note = None, num_notes_generate = 1000):
     """

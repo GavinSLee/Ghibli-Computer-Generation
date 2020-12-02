@@ -34,7 +34,7 @@ def create_network(network_input, n_vocab):
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
-    model.load_weights('saved_weights.hdf5')
+    # model.load_weights('saved_weights.hdf5')
 
     return model
 
@@ -58,7 +58,7 @@ def main():
     directory_name = "data"
     notes = midi_to_notes(directory_name) 
     vocab_size = len(set(notes))
-    train_inputs, train_outputs = get_notes_sequences(notes, vocab_size)
+    train_inputs, train_outputs, note_dict = get_notes_sequences(notes, vocab_size)
     print(train_inputs.shape)
     print(train_outputs.shape)
     print("Preprocessing complete")
