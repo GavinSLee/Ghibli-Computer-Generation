@@ -63,8 +63,8 @@ def get_notes_sequences(notes, vocab_size):
     for i in range(0, len(notes) - sequence_length, 1):
         sequence_in = notes[i:i + sequence_length]
         sequence_out = notes[i + sequence_length]
-        inputs.append([note_to_int[char] for char in sequence_in])
-        labels.append(note_to_int[sequence_out])
+        inputs.append([note_dict[char] for char in sequence_in])
+        labels.append(note_dict[sequence_out])
 
     n_patterns = len(inputs)
 
@@ -74,9 +74,9 @@ def get_notes_sequences(notes, vocab_size):
     inputs = inputs / float(vocab_size)
     labels = utils.to_categorical(labels)
 
-    return (note_to_int, inputs, labels)
+    return (note_dict, inputs, labels)
 
-def predict_notes(model, note_to_int, starting_note = None, num_notes_generate = 1000):
+def predict_notes(model, note_dict, starting_note = None, num_notes_generate = 1000):
     """
     Converts the notes array passed in to a MIDI file, which can be played using a program such as Synthesia. 
 
