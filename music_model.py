@@ -96,10 +96,10 @@ def train(model, train_inputs, train_labels):
     :return: None
     """
     
-    #count how many batches are being made
+    # Count how many batches are being made
     batch_count = train_inputs.shape[0] // model.batch_size
     for i in range(batch_count):
-        #get batch / slices from the input and labels
+        # Get batch / slices from the input and labels
         batch_inputs = train_inputs[i * batch_count: i * batch_count + batch_count]
         batch_labels = train_labels[i * batch_count : i * batch_count + batch_count]
         with tf.GradientTape() as tape: #gradient descent

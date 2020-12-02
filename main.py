@@ -1,4 +1,4 @@
-from preprocess import midi_to_notes, notes_to_midi, get_notes_sequences
+from preprocess import midi_to_notes, generate_midi, get_notes_sequences
 # from music_model import Model, train, test
 import tensorflow as tf;
 import glob
@@ -34,6 +34,7 @@ def create_network(network_input, n_vocab):
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+    model.load_weights('saved_weights.hdf5')
 
     return model
 
@@ -68,10 +69,9 @@ def main():
     #     print(i)
     #     train(model, train_inputs, train_outputs)
 
-    #sequential model
+    # sequential model
     model = create_network(train_inputs, vocab_size)
     train(model, train_inputs, train_outputs)
-
 
 
     #for test, maybe 80 - 20 split?
