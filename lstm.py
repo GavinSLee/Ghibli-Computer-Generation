@@ -11,12 +11,13 @@ import pickle
 from music21 import converter, instrument, stream, note, chord
 
 #Run version 2.1.6
-import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, LSTM, Activation, Bidirectional, Flatten
 from keras import utils
 from keras.callbacks import ModelCheckpoint
 from keras_self_attention import SeqSelfAttention
+from tensorflow.python.keras.layers.core import Reshape
+import tensorflow as tf
 
 def train_network(notes, n_vocab):
     """ Train a Neural Network to generate music """
@@ -97,10 +98,11 @@ def create_network(network_input, n_vocab):
     model.add(SeqSelfAttention(attention_activation='sigmoid'))
     model.add(Dropout(0.3))
     
-    model.add(LSTM(512,return_sequences=True))
+    model.add(LSTM(512,return_sequences=False))
     model.add(Dropout(0.3))
-    
+
     model.add(Flatten()) # Supposedly needed to fix stuff before dense layer
+    
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
@@ -121,11 +123,14 @@ def train(model, network_input, network_output):
     callbacks_list = [checkpoint]
 
     model.fit(network_input, network_output, epochs=200, batch_size=64, callbacks=callbacks_list)
+    print(model.summary())
 
-if __name__ == '__main__':
+if __name__ == "__main__":    
     #load files in
     notes = get_notes()
+
     # get amount of pitch names
     n_vocab = len(set(notes))
+
     #train
     train_network(notes, n_vocab)
