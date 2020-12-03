@@ -1,7 +1,6 @@
 """ This module prepares midi file data and feeds it to the neural
     network for training """
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
@@ -122,7 +121,7 @@ def train(model, network_input, network_output):
     )
     callbacks_list = [checkpoint]
 
-    model.fit(network_input, network_output, epochs=25, batch_size=64, callbacks=callbacks_list)
+    model.fit(network_input, network_output, epochs=25, batch_size=200, callbacks=callbacks_list)
     print(model.summary())
 
 if __name__ == "__main__":    
