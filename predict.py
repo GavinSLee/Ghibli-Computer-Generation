@@ -3,12 +3,11 @@
 import glob
 import pickle
 import numpy
+import keras
 from music21 import converter, instrument, note, chord, stream 
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import LSTM
-from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import Dense, Dropout, LSTM, Activation, Bidirectional, Flatten
+from keras_self_attention import SeqSelfAttention
 from tensorflow.keras.layers import BatchNormalization as BatchNorm
 # from tensorflow.python.keras import utils
 from tensorflow import keras
@@ -56,27 +55,21 @@ def prepare_sequences(notes, pitchnames, n_vocab):
 def create_network(network_input, n_vocab):
     """ create the structure of the neural network """
     model = Sequential()
-    model.add(LSTM(
-        512,
-        input_shape=(network_input.shape[1], network_input.shape[2]),
-        recurrent_dropout=0.3,
-        return_sequences=True
-    ))
-    model.add(LSTM(512, return_sequences=True, recurrent_dropout=0.3,))
-    model.add(LSTM(512))
-    model.add(BatchNorm())
+
+    model.add(Bidirectional(LSTM(512,return_sequences=True),input_shape=(network_input.shape[1], network_input.shape[2]))) #n_time_steps, n_features? Needed input_shape in first layer, which is Bid not LSTM
+    model.add(SeqSelfAttention(attention_activation='sigmoid'))
     model.add(Dropout(0.3))
-    model.add(Dense(256))
-    model.add(Activation('relu'))
-    model.add(BatchNorm())
+    
+    model.add(LSTM(512,return_sequences=True))
     model.add(Dropout(0.3))
+    
+    model.add(Flatten()) #Supposedly needed to fix stuff before dense layer
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     # Load the weights to each node
     model.load_weights('weights.hdf5')
-
     return model
 
 def generate_notes(model, network_input, pitchnames, n_vocab):
