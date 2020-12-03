@@ -29,7 +29,6 @@ def train_network(notes, n_vocab):
 def get_notes():
     """ Get all the notes and chords from the midi files in the ./full_set_beethoven_mozart directory. Call BEFORE train """
     notes = []
-    durations = []
 
     for file in glob.glob("data/*.mid"):
         midi = converter.parse(file)
@@ -110,7 +109,7 @@ def create_network(network_input, n_vocab):
 
 def train(model, network_input, network_output):
     """ train the neural network """
-    filepath = os.path.abspath("weights-1LSTMAtt1LSTMLayer-{epoch:03d}-{loss:.4f}.hdf5")
+    filepath = os.path.abspath("weights-{epoch:03d}-{loss:.4f}.hdf5")
     checkpoint = ModelCheckpoint(
         filepath,
         period=10, #Every 10 epochs
@@ -121,8 +120,7 @@ def train(model, network_input, network_output):
     )
     callbacks_list = [checkpoint]
 
-    model.fit(network_input, network_output, epochs=25, batch_size=200, callbacks=callbacks_list)
-    print(model.summary())
+    model.fit(network_input, network_output, epochs=100, batch_size=64, callbacks=callbacks_list)
 
 if __name__ == "__main__":    
     #load files in
