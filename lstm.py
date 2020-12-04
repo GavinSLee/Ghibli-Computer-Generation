@@ -30,7 +30,7 @@ def get_notes():
     """ Get all the notes and chords from the midi files in the ./full_set_beethoven_mozart directory. Call BEFORE train """
     notes = []
 
-    for file in glob.glob("data_2/*.mid"):
+    for file in glob.glob("data/*.mid"):
         midi = converter.parse(file)
 
         print("Parsing %s" % file)
@@ -51,7 +51,7 @@ def get_notes():
             elif isinstance(element, note.Rest):
                 notes.append(str(element.name)  + " " + str(element.quarterLength))
 
-    with open('data_2/notes', 'wb') as filepath:
+    with open('data/notes', 'wb') as filepath:
         pickle.dump(notes, filepath)
 
     return notes

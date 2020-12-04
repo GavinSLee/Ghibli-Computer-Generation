@@ -19,7 +19,7 @@ import tensorflow as tf
 def generate():
     """ Generate a piano midi file """
     #load the notes used to train the model
-    with open('data_2/notes', 'rb') as filepath:
+    with open('data/notes', 'rb') as filepath:
         notes = pickle.load(filepath)
 
     # Get all pitch names
