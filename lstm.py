@@ -90,7 +90,7 @@ def prepare_sequences(notes, n_vocab):
 def create_network(network_input, n_vocab):
     """ create the structure of the neural network """
     model = Sequential()
-    opt = tf.keras.optimizers.Adam(learning_rate=0.01)
+    opt = tf.keras.optimizers.RMSprop(learning_rate=0.001)
     model.add(Bidirectional(LSTM(512,
         input_shape=(network_input.shape[1], network_input.shape[2]), #n_time_steps, n_features?
         return_sequences=True)))
@@ -121,7 +121,7 @@ def train(model, network_input, network_output):
     )
     callbacks_list = [checkpoint]
 
-    model.fit(network_input, network_output, epochs=150, batch_size=128, callbacks=callbacks_list)
+    model.fit(network_input, network_output, epochs=150, batch_size=128, callbacks=callbacks_list, shuffle=True)
 
 if __name__ == "__main__":    
     #load files in
