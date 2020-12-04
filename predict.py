@@ -73,7 +73,7 @@ def create_network_add_weights(network_input, n_vocab):
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     # Load the weights to each node
-    model.load_weights('weights.hdf5')
+    model.load_weights('weights-040-6.8913.hdf5')
     
     return model
 
