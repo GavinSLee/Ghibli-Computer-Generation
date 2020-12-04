@@ -90,6 +90,7 @@ def prepare_sequences(notes, n_vocab):
 def create_network(network_input, n_vocab):
     """ create the structure of the neural network """
     model = Sequential()
+    opt = tf.keras.optimizers.RMSprop(learning_rate=0.01)
     model.add(Bidirectional(LSTM(512,
         input_shape=(network_input.shape[1], network_input.shape[2]), #n_time_steps, n_features?
         return_sequences=True)))
@@ -103,7 +104,7 @@ def create_network(network_input, n_vocab):
     
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+    model.compile(loss='categorical_crossentropy', optimizer=opt)
 
     return model
 
