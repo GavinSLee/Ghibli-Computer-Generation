@@ -17,8 +17,9 @@ if __name__ == "__main__":
 
     model = create_network(network_input, n_vocab)
 
-    model.fit(network_input, network_output, epochs=1, batch_size=1 , shuffle=True)
+    model.fit(network_input, network_output, epochs=1, batch_size=2, shuffle=True)
 
+    print("loaded")
     model.load_weights("weights-060-4.7109.hdf5")
 
     train(model, network_input, network_output)
