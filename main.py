@@ -4,7 +4,7 @@ from predict import generate
 from model import Model, train
 
 def main():
-    if len(sys.argv) != 2 or sys.argv[1] not in {"train", "predict"}:
+    if len(sys.argv) != 2 or sys.argv[1] not in {"train", "generate"}:
         print("USAGE: python main.py <Action Type>")
         print("<Action Type>: [train/predict]")
         exit()
@@ -22,10 +22,8 @@ def main():
 
         train(model, network_input, network_output)
 
-    elif sys.argv[1] == "predict":
+    elif sys.argv[1] == "generate":
         generate()
-
-
 
 
 if __name__ == '__main__':

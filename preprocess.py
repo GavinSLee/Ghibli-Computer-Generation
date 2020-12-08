@@ -1,36 +1,46 @@
 import numpy as np
 import glob
 import pickle
-from music21 import converter, instrument, stream, note, chord
+from music21 import converter, instrument, note, chord
 from keras import utils
 
 
-def get_notes():
-    """ Get all the notes and chords from the midi files in the ./full_set_beethoven_mozart directory. Call BEFORE train """
+def get_notes(directory_name):
+    """  
+    Parses through every MIDI file in the directory folder passed in and gets every single note, chord, and rest in the MIDI file. 
+
+    :param directory_name: name of the directory which contains all of the midi files (str) 
+    :returns: list of notes, chords, and rests that are in every MIDI file in the directory_name
+    """
+
     notes = []
 
-    for file in glob.glob("data/*.mid"):
-        print("Parsing %s" % file)
+    for file in glob.glob(directory_name + "/*.mid"):
 
-        midi = converter.parse(file)
+        curr_notes = []
 
-        notes_to_parse = None
+        curr_midi = converter.parse(file)
 
-        try: # file has instrument parts
-            s2 = instrument.partitionByInstrument(midi) #Change to only grab the piano???
-            notes_to_parse = s2.parts[0].recurse() 
-        except: # file has notes in a flat structure
-            notes_to_parse = midi.flat.notes
+        # Returns a list of instrument channels through which we need to parse through 
+        channels = instrument.partitionByInstrument(curr_midi)
 
-        for element in notes_to_parse:
-            if isinstance(element, note.Note):
+        # The current file has multiple instrument parts 
+        if channels != None and len(channels.parts):
+            for channel in channels.parts:
+                curr_notes.append(channel.recurse())
+        # The current file has only one instrument part, to which we parse only the flat notes 
+        else:
+            curr_notes.append(curr_midi.flat.notes) 
+
+        for element in curr_notes:
+            if isinstance(element, note.Rest):
+                notes.append(str(element.name)  + " " + str(element.quarterLength))
+            elif isinstance(element, note.Note):
                 notes.append(str(element.pitch) + " " +  str(element.quarterLength))
             elif isinstance(element, chord.Chord):
                 notes.append('.'.join(str(n) for n in element.normalOrder) + " " + str(element.quarterLength))
-            elif isinstance(element, note.Rest):
-                notes.append(str(element.name)  + " " + str(element.quarterLength))
-
-    with open('data/notes', 'wb') as filepath:
+            
+    with open(directory_name + '/saved_notes', 'wb') as filepath:
         pickle.dump(notes, filepath)
 
     return notes
@@ -66,3 +76,7 @@ def prepare_sequences(notes, n_vocab):
     network_output = utils.to_categorical(network_output)
 
     return (network_input, network_output)
+
+if __name__ == "__main__":
+    directory_name = "data"
+    get_notes(directory_name)
