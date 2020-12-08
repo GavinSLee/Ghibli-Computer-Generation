@@ -31,11 +31,11 @@ def predict_next_index(model, vocab, sequence):
     """
 
     prediction_input = np.reshape(sequence, (1, len(sequence), 1))
-    prediction_input = prediction_input / float(vocab)
+    prediction_input = prediction_input / float(len(vocab))
 
     probabilities = model.predict(prediction_input, verbose=0)
-    predicted_index = np.argmax(probabilities) 
-
+    predicted_index = np.argmax(probabilities)
+ 
     sequence = sequence[1:] + [predicted_index]
 
     return predicted_index, sequence 
@@ -60,7 +60,7 @@ def generate_notes(model, inputs, vocab, start_index = None, num_generate = 400)
     pred_indices = []
 
     for i in range(num_generate):
-        curr_pred_index = predict_next_index(model, vocab, sequence)
+        curr_pred_index, sequence = predict_next_index(model, vocab, sequence)
         pred_indices.append(curr_pred_index)  
 
     pred_notes = convert_indices_to_notes(pred_indices, vocab) 

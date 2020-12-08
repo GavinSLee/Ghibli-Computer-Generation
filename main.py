@@ -15,7 +15,9 @@ def main():
     notes = preprocess.get_notes(directory_name)
     vocab = preprocess.get_vocab(notes)  
     vocab_size = len(vocab)
-    input_windows, label_notes = preprocess.get_windows(notes) 
+    input_windows, label_notes = preprocess.get_windows(notes)
+    inputs_g, labels_g = preprocess.get_inputs_and_labels(input_windows, label_notes, vocab)  
+    
     inputs, labels = preprocess.final_inputs_and_labels(notes, vocab) 
 
     # Initialize model
@@ -30,6 +32,7 @@ def main():
         print("Generating MIDI file using loaded weights...")
         model = Model(inputs, vocab_size) 
         music_model = model.make_model("weights.hdf5")
+
         predicted_notes = generator.generate_notes(music_model, inputs_g, vocab) 
         generator.generate_midi(predicted_notes) 
         print("Finished generating MIDI!")

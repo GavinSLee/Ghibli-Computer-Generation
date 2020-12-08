@@ -45,6 +45,7 @@ def get_notes(directory_name):
                     notes.append(str(element.pitch) + " " +  str(element.quarterLength))
                 elif isinstance(element, chord.Chord):
                     notes.append('.'.join(str(n) for n in element.normalOrder) + " " + str(element.quarterLength))
+            break 
                 
     with open(directory_name + '/saved_notes', 'wb') as filepath:
         pickle.dump(notes, filepath)

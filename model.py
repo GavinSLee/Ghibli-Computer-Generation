@@ -18,14 +18,14 @@ class Model:
         """
 
         self.learning_rate = 0.01
-        self.dropout_rate = 0.2
-        self.hidden_size = 300
+        self.dropout_rate = 0.3
+        self.hidden_size = 512
         self.vocab_size = vocab_size
         self.input_shape = (inputs.shape[1], inputs.shape[2])
         self.epoch_size = 150
         self.batch_size = 128
     
-    def make_model(self, weights):
+    def make_model(self, weights_path = None):
         """ 
         Makes the model. Our model is: LSTM -> Dropout -> Attention -> Dropout -> LSTM  -> Dense.
 
@@ -33,31 +33,23 @@ class Model:
         """
         model = Sequential()
 
-        opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
-
-        model.add(Bidirectional(LSTM(self.hidden_size,
-            input_shape=(self.input_shape),
-            return_sequences=True)))
-
+        model.add(Bidirectional(LSTM(self.hidden_size,return_sequences=True),input_shape=(self.input_shape[0], self.input_shape[1]))) 
         model.add(SeqSelfAttention(attention_activation='sigmoid'))
         model.add(Dropout(self.dropout_rate))
         
         model.add(LSTM(self.hidden_size,return_sequences=False))
         model.add(Dropout(self.dropout_rate))
-
-        model.add(Flatten())
         
+        model.add(Flatten()) 
         model.add(Dense(self.vocab_size))
-
         model.add(Activation('softmax'))
+        model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
-        model.compile(loss='categorical_crossentropy', optimizer=opt)
-
-        if weights != None:
-            model.load_weights(self.weights) 
-
+        # Load the weights to each node
+        if weights_path != None:
+            model.load_weights(weights_path)
         return model
-    
+        
 def train(model, inputs, labels, weights = None):
     """
     Trains the model. Keras makes thing really simple here so that we don't have to worry too much about batching and saving check points for us. This train function will save the weights per epoch by writing to an hdf5 file.
