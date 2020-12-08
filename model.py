@@ -45,7 +45,6 @@ class Model:
         model.add(Activation('softmax'))
         model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
-        # Load the weights to each node
         if weights_path != None:
             model.load_weights(weights_path)
         return model

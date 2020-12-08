@@ -83,7 +83,7 @@ def generate_midi(predicted_notes):
         temp = pred_note[0]
         duration = pred_note[1]
         pred_note = temp
-        # pred_note is a chord
+
         if('rest' in pred_note):
             new_rest = note.Rest(pred_note)
             new_rest.offset = offset
@@ -104,15 +104,12 @@ def generate_midi(predicted_notes):
             new_note.offset = offset
             new_note.storedInstrument = instrument.Piano()
             parsed_notes.append(new_note)
-        # increase offset each iteration so that notes do not stack
         offset += convert_to_float(duration)
 
     midi_stream = stream.Stream(parsed_notes)
 
     midi_stream.write('midi', fp='generated_output.mid')
 
-
-#From: https://stackoverflow.com/questions/1806278/convert-fraction-to-float
 def convert_to_float(frac_str):
     try:
         return float(frac_str)
