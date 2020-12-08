@@ -5,27 +5,38 @@ from keras.layers import Dense, Dropout, LSTM, Activation, Bidirectional, Flatte
 from keras.callbacks import ModelCheckpoint
 from keras_self_attention import SeqSelfAttention
 
-
-
 class Model:
-    def __init__(self, network_input, vocab_size):
-        """ create the structure of the neural network """
-        self.learning_rate = 0.001
-        self.dropout_rate = 0.3
-        self.hidden_size = 512
-        self.vocab_size = vocab_size
-        self.input_shape = (network_input.shape[1], network_input.shape[2])
+    def __init__(self, inputs, vocab_size):
+        """ 
+        Create the structure of the neural network; here, we set the hyperparameters of our model, such as the learning rate, batch size, etc.
 
+        :param inputs: the list of lists of sequences that we pass to the network 
+        :param vocab_size: the number of unique notes that are seen throughout all the MIDI files  
+        :param weights: the name of the hdf5 file that contains the weights (str) 
+
+        :return: None 
+        """
+
+        self.learning_rate = 0.01
+        self.dropout_rate = 0.2
+        self.hidden_size = 300
+        self.vocab_size = vocab_size
+        self.input_shape = (inputs.shape[1], inputs.shape[2])
         self.epoch_size = 150
         self.batch_size = 128
     
-    def make_model(self):
+    def make_model(self, weights):
+        """ 
+        Makes the model. Our model is: LSTM -> Dropout -> Attention -> Dropout -> LSTM  -> Dense.
+
+        :return: None 
+        """
         model = Sequential()
 
-        opt = tf.keras.optimizers.RMSprop(learning_rate=self.learning_rate)
+        opt = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
 
         model.add(Bidirectional(LSTM(self.hidden_size,
-            input_shape=(self.input_shape), #n_time_steps, n_features?
+            input_shape=(self.input_shape),
             return_sequences=True)))
 
         model.add(SeqSelfAttention(attention_activation='sigmoid'))
@@ -34,7 +45,7 @@ class Model:
         model.add(LSTM(self.hidden_size,return_sequences=False))
         model.add(Dropout(self.dropout_rate))
 
-        model.add(Flatten()) # Supposedly needed to fix stuff before dense layer
+        model.add(Flatten())
         
         model.add(Dense(self.vocab_size))
 
@@ -42,28 +53,32 @@ class Model:
 
         model.compile(loss='categorical_crossentropy', optimizer=opt)
 
+        if weights != None:
+            model.load_weights(self.weights) 
+
         return model
-
     
+def train(model, inputs, labels, weights = None):
+    """
+    Trains the model. Keras makes thing really simple here so that we don't have to worry too much about batching and saving check points for us. This train function will save the weights per epoch by writing to an hdf5 file.
 
-    
-def train(model, network_input, network_output):
-    sequential_model = model.make_model()
+    :param model: the LSTM + Attention model  
+    :param inputs: the input sequences to train the model 
+    :param labels: the output "label" for each of the sequences  
 
-    """ train the neural network """
-    filepath = os.path.abspath("weights-{epoch:03d}-{loss:.4f}.hdf5")
+    :return: None 
+    """
+
+    music_model = model.make_model(weights)
+    filepath = os.path.abspath("{epoch:03d}-{loss:.2f}.hdf5")
     checkpoint = ModelCheckpoint(
         filepath,
-        period=10, #Every 10 epochs
-        monitor='loss',
-        verbose=1,
-        save_best_only=False,
-        mode='min'
+        save_freq = 350, 
+        monitor= 'loss',
+        verbose = 1,
+        save_best_only = False,
+        mode= 'min'
     )
     callbacks_list = [checkpoint]
-    sequential_model.fit(network_input, network_output, epochs=model.epoch_size, batch_size=model.batch_size, callbacks=callbacks_list, shuffle=True)
-
-
-
-
+    music_model.fit(inputs, labels, epochs = model.epoch_size, batch_size = model.batch_size, callbacks = callbacks_list, shuffle = True)
 
