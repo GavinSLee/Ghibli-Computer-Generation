@@ -31,11 +31,10 @@ def main():
     elif sys.argv[1] == "GENERATE":
         print("Generating MIDI file using loaded weights...")
         model = Model(inputs, vocab_size) 
-        music_model = model.make_model("weights.hdf5")
-
-        predicted_notes = generator.generate_notes(music_model, inputs_g, vocab) 
+        predicted_notes = generator.generate_notes(model, inputs_g, vocab) 
         generator.generate_midi(predicted_notes) 
         print("Finished generating MIDI!")
+
 
 if __name__ == '__main__':
     main()

@@ -6,7 +6,7 @@ from keras.callbacks import ModelCheckpoint
 from keras_self_attention import SeqSelfAttention
 
 class Model:
-    def __init__(self, inputs, vocab_size):
+    def __init__(self, inputs, vocab_size,  weights_path = None):
         """ 
         Create the structure of the neural network; here, we set the hyperparameters of our model, such as the learning rate, batch size, etc.
 
@@ -18,16 +18,17 @@ class Model:
         """
 
         self.learning_rate = 0.01
-        self.dropout_rate = 0.3
+        self.dropout_rate = 0.2
         self.hidden_size = 512
         self.vocab_size = vocab_size
         self.input_shape = (inputs.shape[1], inputs.shape[2])
         self.epoch_size = 150
         self.batch_size = 128
+        self.weights_path = weights_path
     
-    def make_model(self, weights_path = None):
+    def make_model_1(self):
         """ 
-        Makes the model. Our model is: LSTM -> Dropout -> Attention -> Dropout -> LSTM  -> Dense.
+        Makes the LSTM + Attention model. Our model is: LSTM -> Dropout -> Attention -> Dropout -> LSTM  -> Dense.
 
         :return: None 
         """
@@ -45,8 +46,31 @@ class Model:
         model.add(Activation('softmax'))
         model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
-        if weights_path != None:
-            model.load_weights(weights_path)
+        if self.weights_path != None:
+            model.load_weights(self.weights_path)
+        return model
+
+    def make_model_2(self):
+        """ 
+        Makes the pure LSTM model. 
+
+        :return: None 
+        """
+        
+        model = Sequential()
+        model.add(LSTM(
+            self.hidden_size,
+            input_shape=(self.input_shape[0], self.input_shape[2]),
+            recurrent_dropout =  self.dropout_rate,
+            return_sequences=True
+        ))
+        model.add(LSTM(self.hidden_size, return_sequences = False, recurrent_dropout=self.dropout_rate))
+        model.add(Dense(self.hidden_size))
+        model.add(Activation('relu'))
+        model.add(Dropout(self.dropout_rate))
+        model.add(Dense(self.vocab_size))
+        model.add(Activation('softmax'))
+        model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
         return model
         
 def train(model, inputs, labels, weights = None):
@@ -60,7 +84,7 @@ def train(model, inputs, labels, weights = None):
     :return: None 
     """
 
-    music_model = model.make_model(weights)
+    music_model = model.make_model_1(weights)
     filepath = os.path.abspath("{epoch:03d}-{loss:.2f}.hdf5")
     checkpoint = ModelCheckpoint(
         filepath,

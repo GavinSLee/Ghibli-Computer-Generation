@@ -21,7 +21,7 @@ def convert_indices_to_notes(indices, vocab):
     
     return notes 
 
-def predict_next_index(model, vocab, sequence):
+def predict_next_index(music_model, vocab, sequence):
     """
     Predicts the next index (which will be used to predict the next note) given a sequence of indices. 
 
@@ -33,7 +33,7 @@ def predict_next_index(model, vocab, sequence):
     prediction_input = np.reshape(sequence, (1, len(sequence), 1))
     prediction_input = prediction_input / float(len(vocab))
 
-    probabilities = model.predict(prediction_input, verbose=0)
+    probabilities = music_model.predict(prediction_input, verbose=0)
     predicted_index = np.argmax(probabilities)
  
     sequence = sequence[1:] + [predicted_index]
@@ -53,6 +53,8 @@ def generate_notes(model, inputs, vocab, start_index = None, num_generate = 400)
     :return: list of predicted indices  
     """
 
+    music_model = model.make_model_1()
+
     if start_index == None:
         start_index = np.random.randint(0, len(inputs) - 1)
 
@@ -60,11 +62,46 @@ def generate_notes(model, inputs, vocab, start_index = None, num_generate = 400)
     pred_indices = []
 
     for i in range(num_generate):
-        curr_pred_index, sequence = predict_next_index(model, vocab, sequence)
+        curr_pred_index, sequence = predict_next_index(music_model, vocab, sequence)
         pred_indices.append(curr_pred_index)  
 
     pred_notes = convert_indices_to_notes(pred_indices, vocab) 
     return pred_notes 
+
+def parse_rest(pred_note, offset):
+    """
+    Logic to parse rest. 
+    """
+
+    new_rest = note.Rest(pred_note)
+    new_rest.offset = offset
+    new_rest.storedInstrument = instrument.Piano() 
+    return new_rest 
+
+def parse_chord(pred_note, offset):
+    """
+    Helper method that parses a chord. 
+    """
+
+    notes_in_chord = pred_note.split('.')
+    notes = []
+    for current_note in notes_in_chord:
+        new_note = note.Note(int(current_note))
+        new_note.storedInstrument = instrument.Piano()
+        notes.append(new_note)
+    new_chord = chord.Chord(notes)
+    new_chord.offset = offset
+    return new_chord 
+
+def parse_note(pred_note, offset):
+    """
+    Helper method that parses a regular note 
+    """
+
+    new_note = note.Note(pred_note)
+    new_note.offset = offset
+    new_note.storedInstrument = instrument.Piano()
+    return new_note 
 
 
 def generate_midi(predicted_notes):
@@ -83,32 +120,25 @@ def generate_midi(predicted_notes):
         temp = pred_note[0]
         duration = pred_note[1]
         pred_note = temp
-
+        # Check rest
         if('rest' in pred_note):
-            new_rest = note.Rest(pred_note)
-            new_rest.offset = offset
-            new_rest.storedInstrument = instrument.Piano() 
+            new_rest = parse_rest(pred_note, offset) 
             parsed_notes.append(new_rest)
+        # Check for chords 
         elif ('.' in pred_note) or pred_note.isdigit():
-            notes_in_chord = pred_note.split('.')
-            notes = []
-            for current_note in notes_in_chord:
-                new_note = note.Note(int(current_note))
-                new_note.storedInstrument = instrument.Piano()
-                notes.append(new_note)
-            new_chord = chord.Chord(notes)
-            new_chord.offset = offset
+            new_chord = parse_chord(pred_note, offset) 
             parsed_notes.append(new_chord)
+        # Check for regular note 
         else:
-            new_note = note.Note(pred_note)
-            new_note.offset = offset
-            new_note.storedInstrument = instrument.Piano()
+            new_note = parse_note(pred_note, offset) 
             parsed_notes.append(new_note)
+
         offset += convert_to_float(duration)
 
     midi_stream = stream.Stream(parsed_notes)
 
     midi_stream.write('midi', fp='generated_output.mid')
+
 
 def convert_to_float(frac_str):
     try:
