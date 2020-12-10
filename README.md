@@ -11,7 +11,7 @@ This is a final project completed for Brown University's Deep Learning Course (C
 
 https://docs.google.com/document/d/1i0tiem_6-IsJXpxYPN604SRDo_zywTPekJL1cOsL8MM/edit?usp=sharing
 
-This README will mostly contain info on how to train the model and run it. 
+This README will mostly contain info on how to train our model and generate a sample MIDI output. 
 
 ## Virtual Environment
 
