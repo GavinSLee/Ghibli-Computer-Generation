@@ -42,15 +42,15 @@ def predict_next_index(music_model, vocab, sequence):
 
 def generate_notes(model, inputs, vocab, start_index = None, num_generate = 400):
     """
-    Generates a list of indices given the model, inputs, vocab dictionary, start index, and the number of notes to generate. 
+    Generates a list of notes given the model, inputs, vocab dictionary, start index, and the number of notes to generate. 
 
     :param model: RNN that is trained in model.py  
     :param inputs: list of lists of indices
     :param vocab: dictionary that maps each note to a unique index 
-    :param start_index: the index for which we start with to generate notes (defaults to None, which will start with a random index) 
+    :param start_index: the index for which we start with to generate notes (defaults to None, which  will start with a random index) 
     :param num_generate: the number of notes to generate (defaults to 400 notes) 
 
-    :return: list of predicted indices  
+    :return: list of predicted notes 
     """
 
     music_model = model.make_model_1()
@@ -70,43 +70,61 @@ def generate_notes(model, inputs, vocab, start_index = None, num_generate = 400)
 
 def parse_rest(pred_note, offset):
     """
-    Logic to parse rest. 
+    Handles the logic for parsing a rest. Here, we set the offset and the instrument of the rest. Used in conjunction with generating a MIDI file. 
+
+    :param pred_note: the predicted note that is checked as a rest. 
+    :param: offset to ensure notes don't stack on top of one another. 
+
+    :return: parsed rest note 
     """
 
-    new_rest = note.Rest(pred_note)
-    new_rest.offset = offset
-    new_rest.storedInstrument = instrument.Piano() 
-    return new_rest 
+    parsed_rest = note.Rest(pred_note)
+    parsed_rest.offset = offset
+    parsed_rest.storedInstrument = instrument.Piano() 
+    return parsed_rest 
 
 def parse_chord(pred_note, offset):
     """
-    Helper method that parses a chord. 
+    Handles the logic for parsing a chord. Here, we set the offset of the chord as well. Used in conjunction with generating a MIDI file. 
+
+    :param pred_note: the predicted note that is checked as a chord. 
+    :param: offset to ensure notes don't stack on top of one another. 
+
+    :return: parsed chord  
     """
 
     notes_in_chord = pred_note.split('.')
     notes = []
-    for current_note in notes_in_chord:
-        new_note = note.Note(int(current_note))
+
+    # Note that chords have multiple parts to it when parsed using Music21. We must parse through every single one of these notes in the chord and store it in a list. 
+
+    for curr_note in notes_in_chord:
+        new_note = note.Note(int(curr_note))
         new_note.storedInstrument = instrument.Piano()
         notes.append(new_note)
-    new_chord = chord.Chord(notes)
-    new_chord.offset = offset
-    return new_chord 
+    parsed_chord = chord.Chord(notes)
+    parsed_chord.offset = offset
+    return parsed_chord 
 
 def parse_note(pred_note, offset):
     """
-    Helper method that parses a regular note 
+    Handles the logic for parsing a regular note. Here, we set the offset and the kind of instrument used. Used in conjunction with generating a MIDI file. 
+
+    :param pred_note: the predicted note that is checked as a flat note. 
+    :param: offset to ensure notes don't stack on top of one another. 
+
+    :return: parsed flat note 
     """
 
-    new_note = note.Note(pred_note)
-    new_note.offset = offset
-    new_note.storedInstrument = instrument.Piano()
-    return new_note 
+    parsed_note = note.Note(pred_note)
+    parsed_note.offset = offset
+    parsed_note.storedInstrument = instrument.Piano()
+    return parsed_note 
 
 
 def generate_midi(predicted_notes):
     """ 
-    Generates a midi file based the list of predicted notes passed in. 
+    Generates a midi file based on the list of predicted notes passed in. 
 
     :param predicted_notes: list of predicted notes generated in generate_notes() 
 
@@ -115,43 +133,43 @@ def generate_midi(predicted_notes):
     offset = 0
     parsed_notes = []
 
-    for pred_note in predicted_notes:
-        pred_note = pred_note.split()
-        temp = pred_note[0]
-        duration = pred_note[1]
-        pred_note = temp
+    for curr_note in predicted_notes:
+        note_objects = curr_note.split()
+        pred_note = note_objects[0]
+        duration = note_objects[1]
+
         # Check rest
         if('rest' in pred_note):
-            new_rest = parse_rest(pred_note, offset) 
-            parsed_notes.append(new_rest)
+            parsed_rest = parse_rest(pred_note, offset) 
+            parsed_notes.append(parsed_rest)
         # Check for chords 
         elif ('.' in pred_note) or pred_note.isdigit():
-            new_chord = parse_chord(pred_note, offset) 
-            parsed_notes.append(new_chord)
+            parsed_chord = parse_chord(pred_note, offset) 
+            parsed_notes.append(parsed_chord)
         # Check for regular note 
         else:
             new_note = parse_note(pred_note, offset) 
             parsed_notes.append(new_note)
 
-        offset += convert_to_float(duration)
+        offset += float(duration) 
 
     midi_stream = stream.Stream(parsed_notes)
 
     midi_stream.write('midi', fp='generated_output.mid')
 
 
-def convert_to_float(frac_str):
-    try:
-        return float(frac_str)
-    except ValueError:
-        num, denom = frac_str.split('/')
-        try:
-            leading, num = num.split(' ')
-            whole = float(leading)
-        except ValueError:
-            whole = 0
-        frac = float(num) / float(denom)
-        return whole - frac if whole < 0 else whole + frac
+# def convert_to_float(frac_str):
+#     try:
+#         return float(frac_str)
+#     except ValueError:
+#         num, denom = frac_str.split('/')
+#         try:
+#             leading, num = num.split(' ')
+#             whole = float(leading)
+#         except ValueError:
+#             whole = 0
+#         frac = float(num) / float(denom)
+#         return whole - frac if whole < 0 else whole + frac
 
 
 

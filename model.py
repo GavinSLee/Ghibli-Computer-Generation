@@ -1,5 +1,4 @@
 import os
-import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, LSTM, Activation, Bidirectional, Flatten
 from keras.callbacks import ModelCheckpoint
@@ -8,7 +7,7 @@ from keras_self_attention import SeqSelfAttention
 class Model:
     def __init__(self, inputs, vocab_size,  weights_path = None):
         """ 
-        Create the structure of the neural network; here, we set the hyperparameters of our model, such as the learning rate, batch size, etc.
+        Creates needed values for the neural network; here, we set the hyperparameters of our model, such as the learning rate, batch size, etc.
 
         :param inputs: the list of lists of sequences that we pass to the network 
         :param vocab_size: the number of unique notes that are seen throughout all the MIDI files  
@@ -28,7 +27,7 @@ class Model:
     
     def make_model_1(self):
         """ 
-        Makes the LSTM + Attention model. Our model is: LSTM -> Dropout -> Attention -> Dropout -> LSTM  -> Dense.
+        Makes the LSTM + Attention model. This model is: LSTM -> Attention -> LSTM  -> Dense -> Relu -> Dense -> Softmax.
 
         :return: None 
         """
@@ -52,7 +51,7 @@ class Model:
 
     def make_model_2(self):
         """ 
-        Makes the pure LSTM model. 
+        Makes the pure LSTM model. This model is: LSTM -> LSTM  -> Dense -> Relu -> Dense -> Softmax.
 
         :return: None 
         """
@@ -65,12 +64,18 @@ class Model:
             return_sequences=True
         ))
         model.add(LSTM(self.hidden_size, return_sequences = False, recurrent_dropout=self.dropout_rate))
+
         model.add(Dense(self.hidden_size))
         model.add(Activation('relu'))
+        
         model.add(Dropout(self.dropout_rate))
         model.add(Dense(self.vocab_size))
+        
         model.add(Activation('softmax'))
         model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+
+        if self.weights_path != None:
+            model.load_weights(self.weights_path)
         return model
         
 def train(model, inputs, labels, weights = None):
