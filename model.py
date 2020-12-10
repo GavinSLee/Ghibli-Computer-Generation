@@ -17,8 +17,8 @@ class Model:
         """
 
         self.learning_rate = 0.01
-        self.dropout_rate = 0.2
-        self.hidden_size = 300
+        self.dropout_rate = 0.3
+        self.hidden_size = 512
         self.vocab_size = vocab_size
         self.input_shape = (inputs.shape[1], inputs.shape[2])
         self.epoch_size = 120
