@@ -35,6 +35,8 @@ To train the model, run the following in a terminal:
 python main.py TRAIN
 ```
 
+By default, this will train the LSTM + Attention model for 120 epochs. We recommend using a cloud computing platform, such as GCP or AWS, to train the model, as it takes a while to train. If you'd like to change any of the hyperparameters (batch size, epochs, etc), you must edit that in model.py. 
+
 To generate a MIDI file, run the following in a terminal:
 
 ```
@@ -42,8 +44,4 @@ python main.py GENERATE
 ```
 
 
-
-
-
-
-
+By default, this will generate a MIDI file that has 400 notes using the LSTM + Attention model with the best loaded weights. If you would like to generate more notes or try other weights, you must edit generate.py. 
