@@ -18,10 +18,10 @@ class Model:
 
         self.learning_rate = 0.01
         self.dropout_rate = 0.2
-        self.hidden_size = 512
+        self.hidden_size = 300
         self.vocab_size = vocab_size
         self.input_shape = (inputs.shape[1], inputs.shape[2])
-        self.epoch_size = 150
+        self.epoch_size = 120
         self.batch_size = 128
         self.weights_path = weights_path
     
@@ -78,7 +78,7 @@ class Model:
             model.load_weights(self.weights_path)
         return model
         
-def train(model, inputs, labels, weights = None):
+def train(model, inputs, labels):
     """
     Trains the model. Keras makes thing really simple here so that we don't have to worry too much about batching and saving check points for us. This train function will save the weights per epoch by writing to an hdf5 file.
 
@@ -89,7 +89,7 @@ def train(model, inputs, labels, weights = None):
     :return: None 
     """
 
-    music_model = model.make_model_1(weights)
+    music_model = model.make_model_1()
     filepath = os.path.abspath("{epoch:03d}-{loss:.2f}.hdf5")
     checkpoint = ModelCheckpoint(
         filepath,
