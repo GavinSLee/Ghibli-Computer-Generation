@@ -21,7 +21,7 @@ First, you need to setup a virtual environment. Run the following command in you
 bash create_venv.sh
 ```
 
-Next, to activate virtual environment, run the following:
+Next, to activate the virtual environment, run the following:
 
 ```
 source ./env/bin/activate
