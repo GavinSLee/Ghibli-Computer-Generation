@@ -105,23 +105,7 @@ def parse_chord(pred_note, offset):
     parsed_chord = chord.Chord(notes)
     parsed_chord.offset = offset
     return parsed_chord 
-
-def parse_note(pred_note, offset):
-    """
-    Handles the logic for parsing a regular note. Here, we set the offset and the kind of instrument used. Used in conjunction with generating a MIDI file. 
-
-    :param pred_note: the predicted note that is checked as a flat note. 
-    :param: offset to ensure notes don't stack on top of one another. 
-
-    :return: parsed flat note 
-    """
-
-    parsed_note = note.Note(pred_note)
-    parsed_note.offset = offset
-    parsed_note.storedInstrument = instrument.Piano()
-    return parsed_note 
-
-
+    
 def generate_midi(predicted_notes):
     """ 
     Generates a midi file based on the list of predicted notes passed in. 
@@ -151,23 +135,26 @@ def generate_midi(predicted_notes):
             new_note = parse_note(pred_note, offset) 
             parsed_notes.append(new_note)
 
-        offset += convert_to_float(duration) 
+        offset += float(duration) 
 
     midi_stream = stream.Stream(parsed_notes)
 
     midi_stream.write('midi', fp='generated_output.mid')
+    
+def parse_note(pred_note, offset):
+    """
+    Handles the logic for parsing a regular note. Here, we set the offset and the kind of instrument used. Used in conjunction with generating a MIDI file. 
+
+    :param pred_note: the predicted note that is checked as a flat note. 
+    :param: offset to ensure notes don't stack on top of one another. 
+
+    :return: parsed flat note 
+    """
+
+    parsed_note = note.Note(pred_note)
+    parsed_note.offset = offset
+    parsed_note.storedInstrument = instrument.Piano()
+    return parsed_note 
 
 
 
-def convert_to_float(frac_str):
-    try:
-        return float(frac_str)
-    except ValueError:
-        num, denom = frac_str.split('/')
-        try:
-            leading, num = num.split(' ')
-            whole = float(leading)
-        except ValueError:
-            whole = 0
-        frac = float(num) / float(denom)
-        return whole - frac if whole < 0 else whole + frac

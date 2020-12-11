@@ -4,6 +4,10 @@ import generate as generator
 from model import Model, train
 
 def main():
+    """
+    Either trains the model or generates a midi file. 
+    """
+    
     if len(sys.argv) != 2 or sys.argv[1] not in {"TRAIN", "GENERATE"}:
         print("USAGE: python main.py <Action Type>")
         print("<Action Type>: [train/predict]")
